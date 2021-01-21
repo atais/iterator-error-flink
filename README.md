@@ -1,5 +1,7 @@
 # Jackson Java Iterator error when using with Flink
 
+[Stackoverflow issue](https://stackoverflow.com/questions/65827029/problem-with-java-iterator-created-by-jackson-breaks-scala-flink-application)
+
 The codebase represents the same JSON being parsed with custom method to similar model `case classes`, 
 which contain a *collection*. The implementations I tried were `Iterator`, `Seq` and `List`.
 
