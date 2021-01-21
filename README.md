@@ -16,6 +16,24 @@ def toRoot(node: JsonNode): Root = {
 }
 ```
 
+For some reason, when model is not fully initialized and is passed into another `map` in flink, 
+the app will fail during reading of the lazy properties.
+
+I have illustrated with it with tests:
+ - *"parse in the same thread with flink"* where it works:
+    ```
+    env.fromCollection(Seq(input))
+      .map(i => flatten(read(i)))
+      .print()
+    ```
+ - *"parse in different threads with flink"* **where it does not**:
+    ```
+    env.fromCollection(Seq(input))
+      .map(i => read(i))
+      .map(i => flatten(i))
+      .print()
+    ```
+
 **Currently only eager initialization with a `List` seems to fix the issue.**
 
 This is the status matrix of the problem:
