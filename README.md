@@ -1,22 +1,35 @@
 # Jackson Java Iterator error when using with Flink
 
-The codebase represents the same JSON being parsed with custom method
-to similar model `case classes`, which contain a collection using 
-`Iterator`, `Seq` or `List`.
+The codebase represents the same JSON being parsed with custom method to similar model `case classes`, 
+which contain a *collection*. The implementations I tried were `Iterator`, `Seq` and `List`.
 
-They seem to have the same root cause, but I do not understand the reason.
-**What is more, currently only eager initialization seems to fix the issue.**
+Definition example:
 
-This is the status of the problem:
+```
+case class Root(items: Collection[Data])
+case class Data(data: Collection[Double])
+
+def toRoot(node: JsonNode): Root = {
+    val data: util.Iterator[JsonNode] = if (node.hasNonNull("items")) node.get("items").elements() else node.elements()
+    val items: Collection[Data] = data.asScala.map(x => toData(x))
+    Root(items)
+}
+```
+
+**Currently only eager initialization with a `List` seems to fix the issue.**
+
+This is the status matrix of the problem:
 
 |             | `Iterator`         | `Seq`              | `List`                   |
 |-------------|------------        |-------             |--------                  |
 | *2.11.12*   | :heavy_check_mark: | :x:                | :heavy_check_mark:       |
 | *2.12.13*   | :x:                | :x:                | :heavy_check_mark:       |
 
-For some reason with *Scala 2.12* there is even more problems, but at least the stacktrace 
+For some reason with *Scala 2.12* there are even more problems, but at least the stacktrace 
 seems to be more informative. Not that I know what is wrong with the model or parsing method,
 but the problems seems to lay in `Kryo` not in the `Iterator` itself.
+
+Still, the issue seem to have the same root cause, but I do not understand the reason.
 
 ## Scala 2.11
 ### Seq
